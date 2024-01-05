@@ -9,14 +9,19 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var click: Click
+    @Environment(\.scenePhase) var scenePhase
 
     var body: some View {
         VStack(alignment: .center) {
             Spacer()
-            Text(!click.coordinates.isEmpty ? "Click \(click.num) @ \(click.coordinates)" : "Click somewhere")
+            Text(click.getText())
             Spacer()
+            Button("Reset", action: click.reset)
         }
         .padding()
+        .onChange(of: scenePhase) { previousPhase, newPhase in
+            if newPhase == .background { click.reset() }
+        }
         .frame(
               minWidth: 0,
               maxWidth: .infinity,
@@ -24,14 +29,7 @@ struct ContentView: View {
               maxHeight: .infinity,
               alignment: .center
         )
-        .background(click.num % 2 == 0 ? Color.white: Color.gray)
-        .onTapGesture(perform: {
-            if let data = UserDefaults.standard.data(forKey: "clickLocation") {
-                if let coordinates = try? JSONDecoder().decode(String.self, from: data) {
-                    click.coordinates = coordinates
-                    click.num += 1
-                }
-            }
-        })
+        .background(click.getColor())
+        .onTapGesture(perform: click.update)
     }
 }
